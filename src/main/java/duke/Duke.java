@@ -138,8 +138,8 @@ public class Duke {
         String firstCommand = parser.getFirstCommand();
         Task.TaskType taskType = convertToTaskType(firstCommand);
         String date = parser.findDateInCommand();
-        String taskDesc = parser.findTaskDescription();
-        if (taskDesc.equals("")) {
+        String taskDescription = parser.findTaskDescription();
+        if (taskDescription.equals("")) {
             throw new DukeException("☹ OOPS!!! The description cannot be empty.");
         } else if (date.equals("") && taskType != Task.TaskType.TODO) {
             throw new DukeException("☹ OOPS!!! The date cannot be empty.");
@@ -152,14 +152,14 @@ public class Duke {
                 LocalDate ld = LocalDate.parse(dateString);
                 assert !dateString.equals("");
                 assert !timeString.equals("");
-                tasks.addTask(taskDesc, convertToTaskType(firstCommand), ld, timeString);
+                tasks.addTask(taskDescription, taskType, ld, timeString);
                 writeDataToDuke();
                 return confirmAdditionOfTask();
             } else {
                 throw new DukeException("You need to put the date in yyyy-mm-dd hhmm format!");
             }
         } else {
-            tasks.addTask(taskDesc);
+            tasks.addTask(taskDescription);
             writeDataToDuke();
             return confirmAdditionOfTask();
         }
@@ -204,12 +204,15 @@ public class Duke {
      * @return The TaskType enum of the task.
      */
     public static Task.TaskType convertToTaskType(String command) {
-        if (command.equals("todo")) {
+        switch (command) {
+        case "todo":
             return Task.TaskType.TODO;
-        } else if (command.equals("event")) {
+        case "event":
             return Task.TaskType.EVENT;
-        } else {
+        case "deadline":
             return Task.TaskType.DEADLINE;
+        default:
+            return Task.TaskType.NULL;
         }
     }
 
