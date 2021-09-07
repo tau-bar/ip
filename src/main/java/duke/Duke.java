@@ -1,8 +1,7 @@
 package duke;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 
@@ -37,18 +36,20 @@ public class Duke {
      * delete, list. Other commands are ignored.
      */
     public void run() {
-        storage.loadTasksFromFile(tasks);
         String command;
+        storage.loadTasksFromFile(tasks);
         isRunning = true;
         Scanner scanner = new Scanner(System.in);
         while (isRunning) {
             command = scanner.nextLine();
+            assert command != null;
             parser.interpretCommand(command);
             String firstCommand = parser.getFirstCommand();
+            assert firstCommand != null;
             try {
                 ui.respondToUser(respondToFirstCommand(firstCommand));
             } catch (DukeException e) {
-                ui.showError(e);
+                System.out.println(ui.showError(e));
             }
         }
     }
@@ -64,6 +65,7 @@ public class Duke {
             storage.loadTasksFromFile(tasks);
             parser.interpretCommand(command);
             String firstCommand = parser.getFirstCommand();
+            assert firstCommand != null;
             return respondToFirstCommand(firstCommand);
         } catch (DukeException e) {
             return e.getMessage();
@@ -99,6 +101,7 @@ public class Duke {
         default:
             throw new DukeException("☹ OOPS!!! I'm sorry, but I don't know what that means :-(");
         }
+        assert !Objects.equals(response, "");
         return response;
     }
 
@@ -133,20 +136,22 @@ public class Duke {
      */
     public String addTask() throws DukeException {
         String firstCommand = parser.getFirstCommand();
+        Task.TaskType taskType = convertToTaskType(firstCommand);
         String date = parser.findDateInCommand();
         String taskDesc = parser.findTaskDescription();
-        String aOrAn = firstCommand.equals("event") ? "an" : "a";
         if (taskDesc.equals("")) {
-            throw new DukeException("☹ OOPS!!! The description of " + aOrAn + " " + firstCommand + " cannot be empty.");
-        } else if (date.equals("") && convertToTaskType(firstCommand) != Task.TaskType.TODO) {
-            throw new DukeException("☹ OOPS!!! The date of " + aOrAn + " " + firstCommand + " cannot be empty.");
-        } else if (convertToTaskType(firstCommand) == Task.TaskType.DEADLINE
-                || convertToTaskType(firstCommand) == Task.TaskType.EVENT) {
+            throw new DukeException("☹ OOPS!!! The description cannot be empty.");
+        } else if (date.equals("") && taskType != Task.TaskType.TODO) {
+            throw new DukeException("☹ OOPS!!! The date cannot be empty.");
+        } else if (taskType == Task.TaskType.DEADLINE
+                || taskType == Task.TaskType.EVENT) {
             if (DATE_PATTERN.matcher(date).matches()) {
                 String[] dateSplit = date.split(" ");
                 String dateString = dateSplit[0];
                 String timeString = dateSplit[1];
                 LocalDate ld = LocalDate.parse(dateString);
+                assert !dateString.equals("");
+                assert !timeString.equals("");
                 tasks.addTask(taskDesc, convertToTaskType(firstCommand), ld, timeString);
                 writeDataToDuke();
                 return confirmAdditionOfTask();
@@ -166,6 +171,7 @@ public class Duke {
      */
     public String confirmAdditionOfTask() {
         int tasksLength = tasks.getTasksLength();
+        assert tasksLength != 0;
         return ui.showTaskAddedMessage(tasksLength, tasks.getTask(tasksLength).toString());
     }
 
@@ -178,6 +184,7 @@ public class Duke {
     private String markDone() throws DukeException {
         try {
             int taskIndex = parser.findCommandIndex();
+            assert taskIndex >= 0;
             tasks.markTaskDone(taskIndex);
             Task task = tasks.getTask(taskIndex);
             writeDataToDuke();

@@ -60,9 +60,10 @@ public class Parser {
                 throw new DukeException("☹ OOPS!!! Use /at for events!");
             } else if (currentLine[0].equals("deadline") && currentLine[i].equals("/at")) {
                 throw new DukeException("☹ OOPS!!! Use /by for deadlines!");
+            } else if (currentLine[i].equals("/by") || currentLine[i].equals("/at")) {
+                startingIndexOfDate = i + 1;
+                break;
             }
-            startingIndexOfDate = i + 1;
-            break;
         }
         if (startingIndexOfDate == -1) {
             return "";
